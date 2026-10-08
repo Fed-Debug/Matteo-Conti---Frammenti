@@ -1,0 +1,84 @@
+=================================================================
+VOLUME POC (Point of Control) - Indicator Description
+PowerLanguage / MultiCharts
+=================================================================
+WHAT IT DOES
+-----------------------------------------------------------------
+Builds a rolling volume profile over the last N bars and plots the
+POINT OF CONTROL (POC) - the single price level that has traded
+the most volume over that window - as a horizontal line that
+follows the chart forward.
+The POC marks where the most business has been done, and is
+commonly watched as a magnet / fair-value level.
+HOW IT WORKS
+-----------------------------------------------------------------
+On every CLOSED bar the indicator rebuilds the profile:
+1. It looks back over the last BarsBackward bars.
+2. Each bar contributes its FULL volume to one price "bin".
+The bin price is that bar's typical price,
+(High + Low + Close) / 3, rounded to the nearest tick.
+3. Volume is accumulated per price bin (new bins are created as
+new price levels appear, up to MaxBins).
+4. The bin with the highest total volume is the POC, and that
+price is plotted.
+Between bar closes the line simply holds its last value (the
+profile is only recomputed on bar close, for speed). Before
+BarsBackward bars exist on the chart, nothing is plotted.
+INPUTS
+-----------------------------------------------------------------
+BarsBackward How many bars back to include in the profile.
+Default: 1440 (e.g. ~one day of 1-minute bars).
+MaxBins Maximum number of distinct price levels the
+histogram can hold. Default: 300.
+(See PERFORMANCE and the IMPORTANT note below.)
+LineColor Color of the POC line. Default: Yellow.
+LineSize Thickness of the POC line. Default: 2.
+PERFORMANCE - MaxBins (and BarsBackward)
+-----------------------------------------------------------------
+The whole profile is rebuilt from scratch on each bar close. For
+every one of the BarsBackward bars it searches through the price
+bins already created, so the cost is roughly:
+BarsBackward x (number of active bins)
+Because of this:
+- The MORE bins you allow (higher MaxBins), the more price
+levels can accumulate, the longer each search takes, and the
+SLOWER the indicator runs - both on live bars and when the
+chart reloads / recalculates. Raising MaxBins makes it take
+longer.
+- Raising BarsBackward also increases the cost the same way.
+So keep MaxBins only as large as you actually need.
+There is a trade-off, though: if the price range over the
+lookback covers MORE distinct tick levels than MaxBins, the extra
+levels are simply dropped (the code stops adding bins once it hits
+MaxBins). That can make the POC inaccurate. Rule of thumb:
+MaxBins >= (price range over the lookback) / tick size
+Set it big enough to cover that range - but no bigger.
+IMPORTANT - MaxBins MUST MATCH THE ARRAY SIZE
+-----------------------------------------------------------------
+The arrays are hard-coded:
+BinPrice [300] (0),
+BinVol [300] (0),
+If you increase MaxBins ABOVE 300, you MUST also change BOTH
+array sizes to the same number, otherwise the indicator writes
+past the end of the arrays. Lowering MaxBins below 300 is safe
+(the arrays just have spare room).
+HOW TO INSTALL
+-----------------------------------------------------------------
+1. Open the PowerLanguage Editor in MultiCharts.
+2. File > New > Indicator, name it (e.g. "Volume POC").
+3. Paste in the indicator code.
+4. Press F3 (Compile).
+5. On a chart: Insert > Indicator and select it. It plots on the
+price panel (overlay), so keep it on the price subchart.
+NOTES & LIMITATIONS
+-----------------------------------------------------------------
+- Bar-level approximation: each bar's entire volume is dropped at
+a SINGLE price (its typical price), not spread across the bar's
+range. This is a coarse profile. For a finer POC, run it on a
+smaller bar resolution (or use tick data).
+- Recomputes only on bar close; intrabar it shows the last
+computed POC.
+- Uses the chart's Volume field. Make sure your data feed
+provides real volume - on some feeds Volume is tick count,
+which changes what the POC represents.
+File: Volume POC indicator (PowerLanguage)

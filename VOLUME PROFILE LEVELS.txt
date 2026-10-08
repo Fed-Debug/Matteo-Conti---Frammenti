@@ -1,0 +1,113 @@
+============================================================
+VOLUME PROFILE LEVELS (POC / Value Area calculator)
+MultiCharts / PowerLanguage FUNCTION / calculation only
+============================================================
+OVERVIEW
+--------
+A rolling-window Volume Profile that COMPUTES levels only, it
+draws nothing. It returns the Point of Control (POC) and the two
+Value Area edges (VAH / VAL) so that signals and strategies can act
+on them: fade VAH/VAL back toward the POC, target the POC, trade
+value-area breakouts, and so on.
+The math matches the companion VolumeProfile indicator, so the
+numbers line up with what you see drawn on a chart.
+This is a FUNCTION, not a study you apply to a chart. You call it
+from inside a signal/strategy or another study.
+RETURN VALUE
+------------
+Returns 1 if levels were successfully computed.
+Returns 0 if there is not enough history yet, or the window has no
+range/volume to profile.
+The reference outputs (oPOC, oVAH, oVAL) are only valid when the
+return value is 1. Always gate on the return before using them.
+OUTPUTS (by reference)
+----------------------
+oPOC Point of Control price (center of the highest-volume row)
+oVAH Value Area High (top edge of the highest VA row)
+oVAL Value Area Low (bottom edge of the lowest VA row)
+INPUTS
+------
+WindowBars (NumericSimple) How many bars to profile. The CALLER
+owns the window: a fixed N for a
+rolling profile, bars-since-session-open
+for a per-session profile, or any count
+the signal wants. Must be >= 2.
+UseTickRows (TrueFalseSimple) true = rows snapped to the tick grid
+(row height = TicksPerRow ticks).
+false = NumRows rows spread evenly over
+the window's price range.
+TicksPerRow (NumericSimple) Row height in ticks, used when
+UseTickRows = true.
+NumRows (NumericSimple) Row count when UseTickRows = false.
+Also the fallback divisor in tick mode.
+Internally clamped to [2, 500].
+ValueAreaPct (NumericSimple) Share of total volume the value area
+must capture, e.g. 0.70 for 70%.
+oPOC, oVAH, oVAL (NumericRef) OUTPUT references (see above).
+HOW IT WORKS
+------------
+1. Finds the high/low range across the last WindowBars bars.
+2. Builds price rows over that range, either snapped to the tick
+grid (UseTickRows) or NumRows evenly spaced rows.
+3. Distributes each bar's volume evenly across every row its
+high-low span covers (a feed-agnostic estimate; no Data2 or
+per-tick bid/ask data is used).
+4. POC = the row holding the most volume.
+5. Value area = starting at the POC, step outward one row at a time,
+each step taking the HEAVIER of the two neighbour rows, until
+ValueAreaPct of total volume is accumulated (the textbook greedy
+walk; ties go to the upper row).
+*** IMPORTANT: MAXBARSBACK ***
+------------------------------
+The window loops read High[bk] / Low[bk] / Volume[bk] out to a
+RUNTIME offset (WindowBars - 1). The compiler cannot auto-detect a
+variable lookback, so you MUST set MaxBarsBack manually to at least
+the largest WindowBars you will ever pass (e.g. >= 480 for the usage
+example below). If you don't, the study errors out or silently
+returns 0 — this is the single most common reason the function
+appears "not to work."
+VOLUME CAVEAT
+-------------
+On intraday data, "Volume" may return actual contract/share volume
+OR tick count, depending on the symbol's volume setting in
+QuoteManager. The volume-distribution method is feed-agnostic, but
+the underlying number still has to be the one you think it is.
+Verify before trusting the profile.
+THE FORMING BAR IS INCLUDED
+---------------------------
+The window includes the current, still-forming bar (offset bk = 0).
+Intrabar, its partial volume shifts the rows, so POC/VAH/VAL move
+tick-to-tick until the bar closes. This is fine for a live rolling
+read. If you need STABLE levels (e.g. for order placement that
+shouldn't move mid-bar), change the loops to use closed bars only
+(bk = 1 to WindowBars).
+PERFORMANCE
+-----------
+The whole window is recomputed on every call — roughly
+O(WindowBars x rows). Fine for normal window sizes. Avoid calling it
+with a very large WindowBars on every bar.
+USAGE EXAMPLE (in a signal / strategy)
+--------------------------------------
+variables: POC(0), VAH(0), VAL(0), VPok(0);
+VPok = VolumeProfileLevels( 480, true, 1, 50, 0.70, POC, VAH, VAL );
+if VPok = 1 then begin
+if MarketPosition = 0 and Close < VAL then
+Buy ("VAreclaim") next bar at market; { revert into value }
+if MarketPosition = 1 then
+Sell ("toPOC") next bar at POC limit; { target the POC }
+end;
+(Remember to set MaxBarsBack >= 480 for this example.)
+SAFETY / VALIDATION NOTES
+-------------------------
+- NumRows is clamped to [2, 500] via a local before it is used as a
+divisor or to size the rows, so NumRows = 0 / 1 / >500 can't cause
+a divide-by-zero or mis-tiled rows.
+- The row-volume array holds 501 elements (indices 0..500); row
+usage is capped at 499, so there is no overflow.
+- The value-area walk can never index out of bounds: the loop
+condition prevents entering with both sides exhausted, and each
+branch only advances a side that still has room.
+- rowsSpanned is forced >= 1, so per-row volume never divides by zero.
+- This is a SIMPLE (non-series) function, it has no self-referencing
+variables, so it is safe to call conditionally (e.g. only when a
+setup is active) without breaking its internal state.

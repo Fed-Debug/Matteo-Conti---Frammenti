@@ -1,0 +1,106 @@
+============================================================
+CUMULATIVE AVERAGE DELTA (Average per-bar delta oscillator)
+MultiCharts / PowerLanguage Indicator / apply in a sub-panel
+============================================================
+OVERVIEW
+--------
+Plots the AVERAGE buying/selling pressure (delta) per bar, rather
+than a running sum. Each bar contributes a "delta" estimated from
+where price closed within its range, weighted by volume; the study
+then averages those deltas using one of two selectable windows.
+Apply this in its OWN sub-panel, the values are volume-scaled,
+not price-scaled.
+IMPORTANT: delta here is a Close-Location-Value (CLV) APPROXIMATION
+of order flow, NOT true bid/ask delta. UpTicks/DownTicks return 0
+on many feeds, so pressure is inferred from the close position
+within the bar's high-low range. Treat it as a proxy.
+HOW THE DELTA IS CALCULATED
+---------------------------
+For each bar:
+Rng = High - Low
+BarDelta = Volume * ( (Close - Low) - (High - Close) ) / Rng
+- Close near the HIGH -> net buying (+)
+- Close near the LOW -> net selling (-)
+- Close mid-range -> delta near zero
+- Zero-range bar -> delta = 0
+Range is -Volume .. +Volume per bar.
+AVERAGING MODES (AvgMode)
+-------------------------
+AvgMode 1 = Cumulative / expanding average. The running MEAN of
+every bar's delta from the reset point to the current
+bar. Noisy at the open, steadies as the session builds.
+This is NOT the same shape as a cumulative-SUM line:
+dividing by a growing bar count flattens the line toward
+the average per-bar pressure, while a sum keeps ramping.
+Different reading, not redundant.
+AvgMode 2 = Rolling average. The mean of the last MALen bars' delta
+(a fixed-window moving average). Behaves as a momentum
+oscillator and is the visually distinct, recommended mode.
+VOLUME CAVEAT
+-------------
+On intraday data, "Volume" may return actual contract/share volume
+OR tick count, depending on the symbol's volume setting in
+QuoteManager. Verify before trusting magnitudes. Use the "Ticks"
+keyword if you want tick count explicitly, regardless of that
+setting. Both delta studies depend on this number being what you
+think it is.
+INPUTS
+------
+AvgMode (2) 1 = expanding average since reset;
+2 = rolling average over MALen bars (recommended).
+MALen (20) Rolling-average window for AvgMode 2.
+Ignored in Cumulative mode.
+ResetDaily (true) true = anchor to the session (reset/cap at
+ResetTime).
+false = continuous over the whole chart.
+ResetTime (0) Session start HHMM (e.g. 0930 RTH, 1800
+Globex, 0 = midnight). Leave at 0 unless
+needed: bars on the new date but BEFORE
+ResetTime fold into the PREVIOUS session's
+totals until the reset fires.
+ShowRawDelta (false) Also plot raw per-bar delta (Plot3). Set
+its style to Histogram.
+Scale (1) Visibility multiplier. Effective on a FIXED
+panel scale; on auto-scale the body only
+grows once the warmup spike is removed.
+WarmupBars (5) AvgMode 1 only: hold the line at 0 for this
+many bars after each reset, to kill the
+start-of-session spike. NOTE: this only
+partially flattens it — at CumCnt = WarmupBars
+the value is the mean of those few bars, not
+exactly zero. Usually enough to stop it
+hijacking the panel auto-scale.
+UpColor (Green) AvgDelta line when >= 0.
+DnColor (Red) AvgDelta line when < 0.
+ZeroColor (DarkGray) Zero reference line.
+RawColor (Blue) Raw per-bar delta plot.
+LineWidth (2) Thickness of the AvgDelta line. NOTE:
+MultiCharts caps plot weight at a small
+maximum; weight is most reliably set in
+Format Study -> Style -> Weight.
+PLOTS
+-----
+Plot1 "AvgDelta" The average-delta line. Colored by sign:
+UpColor when >= 0, DnColor when < 0.
+Plot2 "Zero" Zero reference line.
+Plot3 "BarDelta" Raw per-bar delta (only if ShowRawDelta);
+style as a histogram.
+INTRABAR SAFETY
+---------------
+The running totals (CumSum / CumCnt) are snapshotted on the first
+tick of each new bar (SumAtBarStart / CntAtBarStart, keyed off
+ThisBar). The current bar's still-forming delta is re-added from
+that snapshot every tick, so a live forming bar never double-counts
+itself into the cumulative average. CumSum / CumCnt / the snapshots
+are declared IntrabarPersist for exactly this reason — do not
+change that.
+USAGE NOTES
+-----------
+- For accurate live intraday values, run the study with intra-bar
+updating enabled.
+- AvgMode 2 uses a variable averaging length (Len2). If you see a
+"study needs more bars" warning or a blank early section, set
+MaxBarsBack manually to at least MALen.
+- This is the separate "average" companion to the cumulative-SUM
+delta study; keep the two as distinct indicators rather than
+folding the average back into the sum.

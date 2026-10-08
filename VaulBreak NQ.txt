@@ -1,0 +1,32 @@
+VaultBreak NQ - Longs Only
+==========================
+Long-only intraday volatility-breakout signal for NQ E-mini futures on
+5-minute RTH bars. Each session it sets an upper "noise boundary" above the
+open; a close above that line, while price is also above session VWAP,
+triggers a long. The trade is then managed by a fixed target and stop, a
+VWAP-loss exit, and a hard end-of-day flatten. Nothing is held overnight.
+Instrument and Session
+======================
+• NQ E-mini futures, 5-minute bars
+• Regular trading hours, 09:30–16:00 ET
+• Long only, flat by 15:50 ET, no overnight positions
+Entry (long)
+============
+• Fires when price closes above NoiseUp (session open plus 0.60 of the
+average daily range)
+• Confirmation filter: the close must also be above session VWAP
+• Entry window 09:45 to 15:00, up to 3 trades per day, no pyramiding
+• Needs roughly 15 sessions of warm-up before it begins trading
+Exits (whichever triggers first)
+================================
+• Profit target: $1,000 (50 NQ points)
+• Stop loss: $2,000 (100 NQ points)
+• VWAP exit: two consecutive closes below VWAP
+• Time exit: flat at 15:50 ET
+Notes
+=====
+• "DailyATR" is an expanding-window average of past session ranges, not a
+rolling ATR(14); after warm-up it drifts toward a long-run average rather
+than tracking recent volatility
+• Nominal risk to reward is 1:2, but in practice the VWAP and time exits
+close most trades before either fixed level is reached

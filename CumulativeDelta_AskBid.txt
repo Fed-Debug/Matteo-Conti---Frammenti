@@ -1,0 +1,90 @@
+=======================================================================
+=========
+CumulativeDelta_AskBid — Cumulative Delta from TRUE bid/ask classified trades
+PowerLanguage indicator for MultiCharts
+=======================================================================
+=========
+WHAT IT IS
+A session-anchored cumulative delta line built from real aggressor flow:
+volume traded at the ask minus volume traded at the bid, every trade
+classified against the prevailing quote. Green above zero (net buying
+since the session anchor), gray below (net selling). Zero reference line.
+This is the top tier of delta available inside MultiCharts:
+Level 1 CLV estimate bar shape x volume (CumulativeVolumeDelta)
+Level 2 Tick rule UpTicks - DownTicks (CumulativeDelta_Real)
+Level 3 Quote rule THIS — ask-traded vs bid-traded
+Level 4 Exchange aggressor flag — not reachable in MultiCharts
+On CME futures, level 3 agrees with the exchange flag in the high 90s %.
+The indicator does NOT compute delta itself — it reads MultiCharts' native
+Cumulative Delta data series (which does the tick-by-tick classification)
+and adds the session anchoring, coloring, and a setup guard.
+REQUIREMENTS
+- A feed delivering tick-by-tick trades WITH bid/ask:
+IQFeed — yes; ~8 years of tick history (best historical depth)
+Rithmic — yes; best live stream, shallow tick history
+dxFeed — only on unconflated tiers
+TradeStation / IB — no (use CumulativeDelta_Real on TradeStation)
+- QuoteManager symbol Volume = "Trade Volume" recommended (with "Tick
+Count" the delta is denominated in ticks, not contracts).
+CHART SETUP
+1. Data1 = your price series, as usual.
+2. Insert Instrument -> the SAME symbol again (becomes Data2).
+Format Instrument (Data2) -> Settings:
+Show Delta = ENABLED
+Delta Type = Cumulative Delta
+Breakdown by = Ask Traded vs Bid Traded <-- the level-3 switch
+Build from = Ticks
+Break on Session = UNCHECKED (the study anchors itself)
+Sub-chart: "Hidden" if you only want the indicator line.
+First load triggers a historical tick download — let it finish; the
+line draws as far back as tick history reaches.
+3. Insert this study -> Format Study -> Properties:
+Base study on = the Cumulative Delta series (Data2) <-- MANDATORY
+Sub-chart = its own panel
+Scaling = Right Axis, Range Automatic (Screen).
+NEVER "Same as Instrument" — delta units vs price units.
+INPUTS
+ResetDaily(true) Session anchoring on/off. false = continuous line
+from chart start (overlays the native series 1:1 —
+also the quickest pipeline verification).
+ResetTime(0) Anchor time, HHMM, in the CHART's DISPLAY timezone
+(Format Window -> Time Zone) — not exchange time.
+Examples for CME futures:
+Exchange-time chart: 1700 = Globex open, 0830 = RTH
+Local Berlin chart: 0 (midnight) = Globex open,
+1530 = RTH open
+Bars on a new date before ResetTime stay measured
+against the previous anchor until the reset fires.
+ShowZeroLine(true) Zero reference plot.
+RunSetupCheck(true) Runtime guard, see below.
+LineWidth / UpColor / DownColor / ZeroColor / WarnColor — styling.
+SETUP GUARD
+A correctly configured chart shows NO label. A yellow SETUP warning at
+the last bar means:
+"based on the PRICE series" — Base study on was left on price; fix
+step 3. (Guard assumes price = Data1; if your delta series IS Data1,
+set RunSetupCheck false.)
+"delta series is dead" — series value frozen on >=95% of bars: no
+classified ticks arriving. Check feed and Build from = Ticks.
+NOT code-checkable: the Breakdown dropdown. "Up Tick vs Down Tick"
+produces a level-2 series that is numerically indistinguishable from
+inside PowerLanguage — eyeball Data2's settings.
+READING THE NUMBERS
+- True delta is the small net of large gross flows — a few thousand
+contracts net on tens of thousands traded is normal on NQ. Do not
+expect CLV-sized magnitudes; CLV assigns whole-bar volume by close
+location and is structurally inflated.
+- The native Data2 line (Break on Session off) counts from CHART START;
+this study counts from the SESSION ANCHOR. Their difference is constant
+within a session and jumps only at the reset — that constant offset is
+correct behavior, not an error.
+- Anchor detail: the anchor is taken at the reset bar's Open, i.e. the
+series value after the session's first tick. Exact to the native
+session figure within the first trade's contracts.
+VERIFICATION (once, after setup)
+Run a CumulativeDelta_Real (tick rule) instance next to this study on the
+same session. Expected: close tracking, divergence concentrated where
+price grinds at one price level (the tick rule misclassifying absorption).
+Identical on every bar = suspicious — re-check the Breakdown dropdown.
+=======================================================================
+=========

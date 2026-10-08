@@ -1,0 +1,61 @@
+# MultiCharts Footprint (Volume Delta) / Setup Guide
+MultiCharts' footprint is a built-in chart type called Volume Delta, not an
+indicator. It draws bid/ask (or net-delta) volume in a cell at every price level
+inside each bar. This guide reproduces a clean, readable footprint (tuned for NQ).
+## Before you start
+- Use the full MultiCharts (PowerLanguage) version, the Volume Delta chart type lives here.
+- You need a feed with tick data (IQFeed works; Interactive Brokers does not carry usable tick
+data, so footprints on IB come out wrong).
+- Bar Magnifier is not required for this chart type.
+## Step 1 : Open a chart and the instrument settings
+1. Open a new chart window (Insert key, or File → New → New Chart Window) for your symbol.
+2. Open Format Instrument (double-click the price series, or right-click the chart → Format
+Instrument).
+## Step 2 : Settings tab (build the footprint)
+1. Leave the chart-type dropdown on Regular (Renko/Kagi/etc. would break the footprint).
+2. Resolution, this is the single biggest readability lever. Each footprint row = one minimum tick
+(0.25 on NQ), so a bar's row count = its price range × 4. Time bars (e.g. 15-minute) span hundreds
+of rows and are unreadable. Use small bars instead:
+- Set the unit dropdown (where it says "Minute") to Point, this is MultiCharts' range bar; each bar
+closes after a fixed price range.
+- Set the value to about 5 (≈ 20 rows per NQ bar). Lower it (3–4) for finer cells, raise it for wider
+bars.
+- (Alternatives: Tick bars ≈ 500, or Change bars, both also cap rows. Point/range gives the most
+consistent row count.)
+3. Data Number = 1, SubChart = Show On Top (don't drop the main series into a sub-chart).
+4. Enable the Show Delta section.
+- Delta Type = Volume Delta
+- Build from = Ticks, this makes MultiCharts pull historical tick data for the whole range, so the
+footprint draws back across history, not just live bars.
+- Breakdown by = Ask Traded vs Bid Traded, the truest footprint (needs bid/ask tick data, which
+IQFeed has). "Up Ticks vs Down Ticks" is the alternative.
+## Step 3 : Style tab (make it readable)
+1. Chart Type (left list) = Volume Delta.
+2. Show volume as = Delta (Ask − Bid Volume) for one net number per cell (cleanest), or Bid x
+Ask Volume to see both sides (e.g. 12x17 = 12 sell / 17 buy).
+3. In the Advanced box:
+- Tick Use Static Font Size, essential. By default the cell font scales with box size and disappears
+when zoomed out; this locks it to a fixed size so the numbers stay visible. (Set the Status Line font
+small so it fits the cells.)
+- Tick POC to mark the highest-volume price level (yellow) on each bar.
+- Leave Color Only unticked (tick it only if you want a numberless heatmap for a zoomed-out
+view).
+- Untick Last Price Marker Line unless you want a horizontal line across the chart at the current
+price.
+4. Optional: in the Chart Style component list, set Border width to 0 for cleaner boxes.
+5. Click OK.
+## Step 4 : Read it
+- Zoom in so only ~15–20 bars fill the screen. Footprints are always read a couple dozen bars at a
+time; with ~5-point bars + static font, the numbers are legible at that zoom.
+- For a wide context view, keep a separate higher-timeframe regular chart with your indicators; use
+the footprint chart only for order-flow reading.
+## Gotchas (learned the hard way)
+- Numbers vanish when zoomed out → you forgot Use Static Font Size (Style → Advanced).
+- Cells unreadable / must zoom to one bar → bars span too many rows. Use small Point (range)
+or Tick bars; NQ needs smaller bars than ES because it covers far more points per bar (both tick at
+0.25, but NQ trades ~4× the points → ~4× the rows).
+- A stray green/red vertical line through the bars → that's a painted-bar study (e.g. a
+PlotPaintBar "PaintCandles" indicator) left applied to the chart, not a footprint setting. Right-click
+→ Format Studies → remove it. The native footprint never draws a green/red directional line.
+- A PowerLanguage study cannot read or control the native Volume Delta cell numbers, readability
+is governed entirely by the chart's own settings above.

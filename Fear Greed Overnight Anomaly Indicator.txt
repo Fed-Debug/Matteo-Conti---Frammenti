@@ -1,0 +1,26 @@
+// === Filter 3: Fear & Greed Visualizer (F&G daily > MA) ===
+// Data4 = daily CNN F&G custom symbol (value imported into Close).
+// Apply in a NEW SUBGRAPH (different scale from price).
+// Value line GREEN = signal ON.
+
+Inputs:
+    MA_Length(20);
+
+Vars:
+    Px(0), MA(0), SigOn(False);
+
+Px    = Close of Data4;
+MA    = Average(Close of Data4, MA_Length);
+SigOn = Px > MA;
+
+Plot1(Px, "FearGreed");
+Plot2(MA, "MA");
+
+If SigOn Then
+    SetPlotColor(1, Green)
+Else
+    SetPlotColor(1, Red);
+
+	
+	 
+	

@@ -1,0 +1,15 @@
+This is a growing library of PowerLanguage strategy templates.
+Be clear on what they are and what they are not. These are not finished strategies you can run and
+expect to make money. They are building blocks. Each one is a clean, working scaffold you take,
+adapt, and turn into something of your own.
+The most useful way to use them is to feed them to your LLM. When you are building a strategy
+and need a specific feature, a particular entry, an exit, a sizing method, drop the relevant template
+into your favorite LLM as a reference. It gives the model correct, working PowerLanguage to build
+on, so what comes back is closer to what you actually need and far easier to fix. Over time the point
+is to build yourself a library of templates you can feed to your LLM and develop your own
+strategies faster and cleaner.
+What is here so far is only a small starting set. I will keep uploading new templates regularly, and
+the same goes for the Indicators and Functions channels. This is the starting point, not the finished
+shelf.
+Take them, adapt them, make them yours.
+Matteo

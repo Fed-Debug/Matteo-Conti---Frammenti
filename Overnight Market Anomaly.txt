@@ -1,0 +1,16 @@
+Attached an addendum of the codes shared in the first extra lesson
+
+1. Fixed number of contracts for futures
+
+2. Volatility Scaled for Futures but considering the margin requirements of the broker and
+specifying the account size
+
+3. Volatility Scaled for Single Stocks considering the margin requirements (for cash only you can
+simplu put Initial Margin required = 100%)
+
+This is interesting because you can see how the concept in one paper (the overnight anomaly)
+studied on futures can be expanded to single stock research
+
+On top of that the code is filtering for trend to reduce the number of trades otherwise the
+commissions would erode all the gains
+This is just to give you a template you can use to test it on any stock you want to.

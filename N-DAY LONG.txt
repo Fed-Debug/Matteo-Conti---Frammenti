@@ -1,0 +1,50 @@
+=================================================================
+N-DAY LONG (N-Day High Breakout, long only)
+Short Description (PowerLanguage / MultiCharts signal)
+=================================================================
+WHAT IT DOES
+============
+An intraday long-only breakout strategy. It buys when price breaks
+above the highest daily high of the last N completed days, stops
+taking new entries after a set time, and is forced flat on the
+close at the end of the day. Nothing is held overnight.
+INPUTS
+======
+NumDays Lookback in days for the breakout level.
+Default: 5.
+LastEntryTime HHMM. No new entry is armed at or after this time.
+Default: 1545.
+FlattenTime HHMM. Any open long is closed on this bar's close
+at or after this time. Default: 1600.
+ENTRY & EXIT
+============
+Entry: a resting buy stop at the highest daily High of the last
+NumDays completed days (taken from HighD). It fills only if price
+trades up through that level, and only while the time is before
+LastEntryTime.
+Exit: the ONLY exit is the end-of-day flatten. When the time
+reaches FlattenTime, the long is sold on the close. There is no
+stop loss and no profit target, so a long runs until FlattenTime
+once it is open.
+HOW TO INSTALL
+==============
+1. Open the PowerLanguage Editor in MultiCharts.
+2. File > New > Signal (this is a trading signal, not an
+indicator). Name it "N-Day Long".
+3. Paste in the code and press F3 (Compile).
+4. Apply to an INTRADAY chart. The daily highs are read from the
+same data automatically.
+NOTES & LIMITATIONS
+===================
+• Long only. Pair it with N-Day Short on the same chart if you
+want both directions.
+• The level uses the last N COMPLETED days (HighD(1) is the
+prior day), so today's developing range does not move it.
+• Set LastEntryTime and FlattenTime in HHMM to match your
+session (the 1545 / 1600 defaults suit a close around 16:00).
+• No protective stop or target. Risk stays open until the EOD
+flatten, which can be a full day's adverse move. Add a stop
+yourself if you need one.
+• Default MultiCharts order handling (one position at a time,
+no pyramiding unless enabled).
+File: N-Day Long (PowerLanguage signal)

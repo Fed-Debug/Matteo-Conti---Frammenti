@@ -1,0 +1,74 @@
+// ===========================================================
+// Overnight Sentiment Strategy v1
+// Based on Vojtko & Hanicova (2021), "Market Sentiment and an
+// Overnight Anomaly." Adapted for ES/NQ futures.
+//
+// CONCEPT:
+//   Long the overnight session (close to next-day open) when
+//   the sentiment regime is favorable. Three-signal vote:
+//     1. Trend:   Underlying Close > N-day MA   (bullish trend)
+//     2. Vol:     VIX Close       < N-day MA    (low fear)
+//     3. F&G:     CNN F&G         > N-day MA    (bullish sentiment)
+//   Enter long if at least Min_Signals_Required are bullish.
+//
+// REQUIRED DATA SERIES on the chart (in this exact order):
+//   Data1: ES (or NQ) intraday bars, RTH session 0930-1600 ET
+//          Recommended: 30-min bars
+//   Data2: ES (or NQ) daily        (trend filter)
+//   Data3: VIX             daily   (vol filter)
+//   Data4: CNN_FG          daily   (custom symbol from imported ASCII)
+//
+// MC SETTINGS:
+//   Strategy Properties: Max bars study will reference >= 50
+//   Properties for All:  Realistic fills, no look-ahead
+//   IntrabarOrderGeneration is forced off in code below
+// ===========================================================
+
+[IntrabarOrderGeneration = False]
+
+Inputs:
+    MA_Length            (20),
+    Use_Trend_Filter     (True),
+    Use_VIX_Filter       (True),
+    Use_FG_Filter        (True),
+    Min_Signals_Required (2),    // 1, 2, or 3 (2 = majority vote)
+    NumContracts         (1),
+    Entry_Time           (1600); // HHMM of RTH session close bar
+
+Vars:
+    TrendSig    (False),
+    VIXSig      (False),
+    FGSig       (False),
+    SigCount    (0),
+    FilterOn    (False),
+    ExitPending (False);
+
+// === Evaluate filters at the close of RTH session ===
+If Time = Entry_Time Then begin
+
+    TrendSig = Close of Data2 > Average(Close of Data2, MA_Length);
+    VIXSig   = Close of Data3 < Average(Close of Data3, MA_Length);
+    FGSig    = Close of Data4 > Average(Close of Data4, MA_Length);
+
+    SigCount = 0;
+    If Use_Trend_Filter And TrendSig Then SigCount = SigCount + 1;
+    If Use_VIX_Filter   And VIXSig   Then SigCount = SigCount + 1;
+    If Use_FG_Filter    And FGSig    Then SigCount = SigCount + 1;
+
+    FilterOn = (SigCount >= Min_Signals_Required);
+
+    // === Entry: long at session close ===
+    If MarketPosition = 0 And FilterOn Then begin
+        Buy ("ONLong") NumContracts contracts this bar on close;
+        ExitPending = True;
+    end;
+end;
+
+// === Exit: market at next bar open (= next session open, ~0930 ET) ===
+If ExitPending Then begin
+    Sell ("ONExit") NumContracts contracts next bar at market;
+    ExitPending = False;
+end;
+
+		 
+			

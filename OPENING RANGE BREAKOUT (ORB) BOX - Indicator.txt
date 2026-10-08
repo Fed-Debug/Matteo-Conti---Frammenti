@@ -1,0 +1,83 @@
+=====================================================================
+OPENING RANGE BREAKOUT (ORB) BOX - Indicator
+MultiCharts PowerLanguage template
+=====================================================================
+WHAT IT DOES
+---------------------------------------------------------------------
+At the start of each trading session the indicator watches the first
+stretch of the day (the "opening range") and records the highest high
+and lowest low during that window. Once the window closes it locks that
+band and draws it on the chart:
+- a dashed box around the opening-range period,
+- two solid horizontal lines marking the range High and Low, extended
+across the rest of the session,
+- an optional dotted midline,
+- optional price labels.
+From then on it watches for the first time price pushes beyond the High
+or below the Low and marks that breakout with an arrow. It keeps only
+the most recent few sessions on screen and resets at the start of every
+new day.
+HOW IT WORKS (STEP BY STEP)
+---------------------------------------------------------------------
+1. During the opening window (from the session open to that time plus
+your chosen length) it tracks the running high and low.
+2. When the clock passes the end of the window, the range is "locked"
+for the day and the box and lines are drawn once.
+3. The first close (or touch) above the High prints an up arrow below
+that bar; the first below the Low prints a down arrow above that bar.
+At most one of each per day.
+4. Everything is drawn as chart objects (not plotted lines), which keeps
+each day's levels separate instead of joining them into diagonals.
+5. A small internal list remembers each day's objects, so when a session
+scrolls past your "days shown" limit, its box, lines, and arrows are
+removed automatically.
+INPUTS
+---------------------------------------------------------------------
+Opening range
+ORStartTime (0930) Session open, in HHMM. The range starts here.
+Set to your market's open (e.g. 0930 = 9:30 AM).
+ORLengthMinutes (15) How long the opening range lasts, in minutes.
+15 = the 9:30-9:45 range. Use 5, 30, 60, etc.
+SessionEndTime (1600) Time the High/Low lines stop extending (close).
+Breakouts
+UseCloseBreak (true) How a breakout counts.
+true = a bar must CLOSE beyond the level
+(fewer, more confirmed signals).
+false = a wick/touch beyond the level is enough
+(earlier, more signals).
+EnableAlerts (false) Fire a MultiCharts alert the first time price
+breaks each side. (Also switch alerts on in the
+study's Format -> Alerts tab.)
+History
+MaxDaysShown (5) How many recent sessions stay drawn; older ones
+are removed automatically. 0 = show every loaded
+day. Maximum 20.
+Display toggles
+ShowBox (true) Draw the dashed box over the opening-range period.
+ShowBoxSides (false) Add the box's left/right vertical edges. Off gives
+a cleaner look (just top and bottom).
+ShowMidline (false) Draw a dotted line at the midpoint of the range.
+ShowLabels (true) Show the "OR High / OR Low" price text at the
+right edge.
+ShowBreakouts (true) Draw the breakout arrows.
+Sizing
+LineWidth (1) Thickness of the OR High/Low lines (0 = thinnest).
+ArrowSize (2) Size of the breakout arrows.
+ArrowOffsetFrac (0.25) How far arrows sit off the bar, as a fraction of
+the range height. Bigger = more gap from the candle.
+Colours
+ORHighColor The range High line.
+ORLowColor The range Low line.
+ORMidColor The optional midline.
+BoxColor The box outline.
+BreakoutUpColor The up breakout arrow.
+BreakoutDnColor The down breakout arrow.
+USAGE NOTES
+---------------------------------------------------------------------
+- Apply to an intraday chart (1, 5, 15-minute, etc.).
+- Assumes a single day session that does not cross midnight (regular
+trading hours). For 24-hour / Globex data, the daily reset may need to
+be tied to a session boundary instead of the calendar date.
+- On a live, still-forming bar, freshly drawn objects can disappear on
+the next tick unless the study is set to keep intrabar drawings.
+Historical bars are unaffected.

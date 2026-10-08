@@ -1,0 +1,22 @@
+// === Filter 1: Trend Visualizer (ES/NQ daily Close > MA) ===
+// Data2 = daily ES/NQ. Apply on the PRICE panel (same scale as Data1)
+// or in its own subgraph. Value line GREEN = signal ON.
+
+Inputs:
+    MA_Length(20);
+
+Vars:
+    Px(0), MA(0), SigOn(False);
+
+Px    = Close of Data2;
+MA    = Average(Close of Data2, MA_Length);
+SigOn = Px > MA;
+
+Plot1(Px, "DailyClose");
+Plot2(MA, "MA");
+
+If SigOn Then
+    SetPlotColor(1, Green)
+Else
+    SetPlotColor(1, Red);
+ 	 			  

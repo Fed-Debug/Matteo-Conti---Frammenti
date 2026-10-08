@@ -1,0 +1,47 @@
+=================================================================
+N-BAR SHORT (N-Bar Low Breakout, short only)
+Short Description (PowerLanguage / MultiCharts signal)
+=================================================================
+WHAT IT DOES
+============
+An intraday short-only breakout strategy. It sells short when
+price breaks below the lowest low of the last N bars, stops taking
+new entries after a set time, and is forced flat on the close at
+the end of the day. Nothing is held overnight.
+INPUTS
+======
+NumBars Lookback in bars for the breakout level.
+Default: 5.
+LastEntryTime HHMM. No new entry is armed at or after this time.
+Default: 1545.
+FlattenTime HHMM. Any open short is covered on this bar's close
+at or after this time. Default: 1600.
+ENTRY & EXIT
+============
+Entry: a resting sell-short stop at the lowest Low of the last
+NumBars bars (using the level as it stood on the prior bar). It
+fills only if price trades down through that level, and only while
+the time is before LastEntryTime.
+Exit: the ONLY exit is the end-of-day flatten. When the time
+reaches FlattenTime, the short is covered on the close. There is
+no stop loss and no profit target, so a short runs until
+FlattenTime once it is open.
+HOW TO INSTALL
+==============
+1. Open the PowerLanguage Editor in MultiCharts.
+2. File > New > Signal (this is a trading signal, not an
+indicator). Name it "N-Bar Short".
+3. Paste in the code and press F3 (Compile).
+4. Apply to an INTRADAY chart.
+NOTES & LIMITATIONS
+===================
+• Short only. Pair it with N-Bar Long on the same chart if you
+want both directions.
+• Set LastEntryTime and FlattenTime in HHMM to match your
+session (the 1545 / 1600 defaults suit a close around 16:00).
+• No protective stop or target. Risk stays open until the EOD
+flatten, which can be a full day's adverse move. Add a stop
+yourself if you need one.
+• Default MultiCharts order handling (one position at a time,
+no pyramiding unless enabled).
+File: N-Bar Short (PowerLanguage signal)

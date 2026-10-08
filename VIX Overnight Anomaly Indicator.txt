@@ -1,0 +1,24 @@
+// === Filter 2: VIX Visualizer (VIX daily Close < MA) ===
+// Data3 = daily VIX. Apply in a NEW SUBGRAPH (different scale from price).
+// Value line GREEN = signal ON. NOTE the condition is BELOW the MA.
+
+Inputs:
+    MA_Length(20);
+
+Vars:
+    Px(0), MA(0), SigOn(False);
+
+Px    = Close of Data3;
+MA    = Average(Close of Data3, MA_Length);
+SigOn = Px < MA;   // VIX is bullish when BELOW its MA
+
+Plot1(Px, "VIX");
+Plot2(MA, "MA");
+
+If SigOn Then
+    SetPlotColor(1, Green)
+Else
+    SetPlotColor(1, Red);
+				
+
+  

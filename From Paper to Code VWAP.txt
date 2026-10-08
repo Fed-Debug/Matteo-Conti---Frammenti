@@ -1,0 +1,11 @@
+Here is an example of taking a research paper and turning it into a simple trading strategy to test
+whether the underlying logic might produce a positive drift in the equity curve.
+The code was applied to NQ data on a 1-minute timeframe.
+And make sure you create and compile a custom function called exactly VWAP_RTH_Custom
+using the attached code.
+VWAP is one of those concepts that is heavily used on trading floors because portfolio managers
+use it to evaluate the price at which execution traders are able to get their orders filled.
+If they are executing a buy order for the portfolio manager, the execution trader wants to get filled at
+a price lower than VWAP. If they are executing a sell order, they want to get filled at a price higher
+than VWAP.
+This can create a tendency for price to revert toward the VWAP of the day.

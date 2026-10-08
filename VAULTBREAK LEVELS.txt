@@ -1,0 +1,81 @@
+to the SAME 5-minute RTH chart as the signal, and keep its inputs
+equal to the signal's so the lines match the live trigger to the
+tick.
+Because the strategy is longs-only, only the UP level is drawn.
+There is no downside trigger.
+THE TWO LEVELS
+==============
+NoiseUp = SessionOpen + ( NoiseMult * DailyATR )
+A fixed level for the day, set at the session open. Price
+pushing above it is the breakout the strategy is waiting for.
+"NoiseMult * DailyATR" is the buffer that filters out normal
+open-range noise.
+VWAP = session volume-weighted average price
+Resets at each session open and develops through the day. Used
+as the entry filter / exit reference (e.g. only act on the
+breakout while price is on the right side of VWAP).
+INPUTS
+======
+NoiseMult Multiplier on DailyATR that sets how far above the
+open the breakout level sits. Default: 0.60.
+DailyATRLen Warm-up length for DailyATR, i.e. how many completed
+sessions must exist before the level is computed and
+plotted. Default: 14.
+>>> Set BOTH inputs to the same values as the VaultBreak signal.
+If they differ, the plotted lines will NOT match the trades.
+HOW THE LEVELS ARE COMPUTED
+===========================
+Session tracking (by calendar date):
+• At each new session the open, high and low are reset and the
+session counter advances.
+• The just-finished session's range (High minus Low) is added
+to a running total.
+DailyATR (READ THIS, it is intentional):
+DailyATR is NOT a rolling 14-day ATR. It is an EXPANDING-WINDOW
+(cumulative) average of every completed session's range. Once
+DailyATRLen sessions exist, it equals (sum of all session
+ranges) / (number of sessions) and keeps averaging over the
+full history from there on.
+This is done on purpose so the plotted level equals exactly the
+value the strategy uses internally. If you want a true rolling
+ATR instead, that is a different calculation (and would no
+longer match the signal).
+NoiseUp is locked in once per day at the session open, using that
+day's open plus the DailyATR known at that moment, so it stays
+flat for the whole session.
+VWAP accumulates (typical price x volume) / (volume) from the
+session open. If a bar has no volume it is skipped, and before any
+volume arrives it falls back to Close.
+WARM-UP: why NoiseUp may not show at first
+==========================================
+NoiseUp is only plotted once SessCount >= DailyATRLen + 1 and
+DailyATR > 0, i.e. after about DailyATRLen completed sessions.
+This matches the strategy's entry gate. On a freshly loaded or
+short chart the level will be blank until enough sessions exist,
+so load plenty of history (for the default 14, at least ~15 RTH
+sessions). VWAP plots from the first session.
+HOW TO INSTALL
+==============
+1. Open the PowerLanguage Editor in MultiCharts.
+2. File > New > Indicator, name it "VaultBreak Levels".
+3. Paste in the code.
+4. Press F3 (Compile).
+5. On your 5-min RTH chart (the same one the signal runs on):
+Insert > Indicator and select it. It plots on the price panel.
+NOTES & LIMITATIONS
+===================
+• Built for the same 5-minute RTH chart and the same inputs as
+the VaultBreak NQ longs-only signal. A different timeframe,
+session, or set of inputs means the lines will not match the
+trades.
+• Sessions are detected by calendar-date change. Correct for
+RTH day sessions. An overnight session crossing midnight
+would be split, so use a chart session template aligned to
+the trading day if needed.
+• Uses intrabarpersist variables, so the levels also track
+correctly during the live forming bar, not only on bar close.
+• The session low seed assumes prices below 999999 (fine for
+NQ).
+• Uses the chart's Volume field for VWAP, so make sure your feed
+provides real volume.
+File: VaultBreak Levels indicator (PowerLanguage)

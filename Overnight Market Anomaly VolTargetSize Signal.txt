@@ -1,0 +1,79 @@
+// ===========================================================
+// Overnight Strategy v2 - Trend Filter + Volatility-Targeted Sizing
+//
+// Changes from working v1 (RTH-only chart):
+//   - VIX and Fear&Greed filters removed (shown to destroy value)
+//   - Trend filter retained
+//   - Fixed 1 contract replaced with vol-targeted sizing:
+//     contracts scaled inversely to recent overnight-gap vol so
+//     each night carries ~constant dollar risk (TargetRisk)
+//
+// DATA SERIES (RTH-only chart, CT, end-of-period stamps):
+//   Data1: ES/NQ/MES/MNQ intraday 30-min, RTH session
+//   Data2: SAME instrument, daily, RTH session
+//   (VIX / F&G no longer used by the strategy)
+//
+// DollarsPerPoint is an input so you can scale per instrument:
+//   ES 50, NQ 20, MES 5, MNQ 2
+// ===========================================================
+[IntrabarOrderGeneration = False]
+Inputs:
+    MA_Length        (20),     // trend filter MA window (daily bars)
+    Use_Trend_Filter (True),
+    Entry_Time       (1500),   // RTH close bar (CT, end-of-period)
+    VolLookback      (20),     // days in the overnight-gap vol estimate
+    TargetRisk       (1500),   // target 1-sigma overnight $ risk per trade
+    DollarsPerPoint  (20),     // ES 50, NQ 20, MES 5, MNQ 2
+    MinContracts     (1),
+    MaxContracts     (50);     // raise this for micros so the cap doesn't clip 10x sizing
+Vars:
+    TrendOn    (False),
+    idx        (0),
+    GapRet     (0),
+    SumRet     (0),
+    SumSq      (0),
+    MeanRet    (0),
+    VarRet     (0),
+    ONVol      (0),
+    PerCtrRisk (0),
+    RawSize    (0),
+    NumCtr     (1),
+    ExitPending(False);
+If Time = Entry_Time Then begin
+    // --- Trend filter ---
+    TrendOn = Close of Data2 > Average(Close of Data2, MA_Length);
+    // --- Overnight-gap volatility: rolling stdev of (Open - PrevClose)/PrevClose ---
+    // All gaps are already realized by this morning, so no look-ahead.
+    SumRet = 0;
+    SumSq  = 0;
+    For idx = 0 to VolLookback - 1 begin
+        GapRet = (Open[idx] of Data2 - Close[idx+1] of Data2) / Close[idx+1] of Data2;
+        SumRet = SumRet + GapRet;
+        SumSq  = SumSq  + GapRet * GapRet;
+    end;
+    MeanRet = SumRet / VolLookback;
+    VarRet  = SumSq / VolLookback - MeanRet * MeanRet;
+    If VarRet < 0 Then VarRet = 0;
+    ONVol = SquareRoot(VarRet);   // overnight-gap return stdev (decimal)
+    // --- Convert vol to contracts: constant $ risk per trade ---
+    PerCtrRisk = ONVol * Close of Data2 * DollarsPerPoint;
+    If PerCtrRisk > 0 Then
+        RawSize = TargetRisk / PerCtrRisk
+    Else
+        RawSize = MinContracts;
+    NumCtr = IntPortion(RawSize + 0.5);          // round to nearest whole contract
+    If NumCtr < MinContracts Then NumCtr = MinContracts;
+    If NumCtr > MaxContracts Then NumCtr = MaxContracts;
+    // --- Entry: long at RTH close, vol-targeted size ---
+    If (Use_Trend_Filter = False Or TrendOn) And MarketPosition = 0 Then begin
+        Buy ("ONLong") NumCtr contracts this bar on close;
+        ExitPending = True;
+    end;
+end;
+// --- Exit at next RTH open (queued from entry bar) ---
+If ExitPending Then begin
+    Sell ("ONExit") next bar at market;          // closes the full position
+    ExitPending = False;
+end;
+	 
+		 	 

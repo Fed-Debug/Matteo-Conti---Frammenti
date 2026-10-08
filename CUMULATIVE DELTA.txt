@@ -1,0 +1,77 @@
+============================================================
+CUMULATIVE DELTA (Close-Location-Value Proxy)
+MultiCharts / PowerLanguage Indicator
+============================================================
+OVERVIEW
+--------
+Plots a running cumulative delta line that estimates net buying
+vs. selling pressure intraday. Each bar contributes a "delta"
+based on where price closed within the bar's range, weighted by
+volume. The deltas accumulate into a single line that resets at
+the start of each session (optional).
+IMPORTANT: This is a Close-Location-Value (CLV) APPROXIMATION of
+order flow, NOT true bid/ask delta. It infers pressure from the
+close position within the bar's high-low range. A bar that runs
+both directions before closing mid-range can show near-zero delta
+even if real order flow was strongly one-sided. Treat it as a
+proxy, not a tick-level footprint.
+HOW THE DELTA IS CALCULATED
+---------------------------
+For each bar:
+BarRange = High - Low
+BarDelta = Volume * ( (Close - Low) - (High - Close) ) / BarRange
+- Close near the HIGH -> positive delta (buying pressure)
+- Close near the LOW -> negative delta (selling pressure)
+- Close mid-range -> delta near zero
+- Zero-range bars -> delta = 0 (divide-by-zero guarded)
+CumDelta = CumDelta + BarDelta (running total)
+VOLUME CAVEAT
+-------------
+On intraday data, "Volume" may return actual contract/share volume
+OR tick count, depending on the symbol's volume setting in
+QuoteManager. Verify this before trusting the magnitudes. Use the
+"Ticks" keyword instead if you want tick count explicitly,
+regardless of the symbol setting.
+INPUTS
+------
+ResetDaily (true) Zero out CumDelta at the start of each
+session. Set false to accumulate
+continuously across days.
+ResetTime (0) Earliest time the daily reset may fire.
+Leave at 0 (resets on first bar of each
+new date). CAUTION: setting this later
+than the day's first bar causes bars
+before ResetTime to be added onto the
+PREVIOUS day's total before the wipe.
+ShowZeroLine (true) Draw the flat reference line at zero.
+LineWidth (2) Thickness of the CumDelta line. NOTE:
+MultiCharts caps plot weight at a small
+maximum, so very large values render the
+same as the cap. Line weight is most
+reliably controlled in Format Study ->
+Style -> Weight.
+UpColor (Green) Line color while CumDelta >= 0.
+DownColor (LightGray) Line color while CumDelta < 0.
+ZeroColor (DarkGray) Color of the zero reference line.
+PLOTS
+-----
+Plot1 "CumDelta" Running cumulative delta. Colored by sign:
+UpColor when >= 0, DownColor when < 0.
+Plot2 "Zero" Flat zero reference line (if ShowZeroLine).
+COLORING NOTE
+-------------
+The line color keys off the SIGN of CumDelta (above/below zero),
+NOT the direction of change. A line that is rising while still
+negative will display in DownColor.
+USAGE NOTES
+-----------
+- For accurate live intraday values, run the study with intra-bar
+updating enabled.
+- Keep CumDelta and LastResetDate as plain variables. Do NOT
+declare them IntrabarPersist — on per-tick updates a normal
+variable correctly rolls back to the prior bar's value before
+re-adding the evolving BarDelta. Making them persist would add
+on every tick and corrupt the total.
+- Average / smoothed cumulative delta is intentionally NOT part
+of this study. If needed, build it as a separate indicator
+rather than folding it back in here.

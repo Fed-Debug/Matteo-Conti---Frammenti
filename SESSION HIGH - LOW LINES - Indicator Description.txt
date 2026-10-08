@@ -1,0 +1,64 @@
+=================================================================
+SESSION HIGH / LOW LINES - Indicator Description
+PowerLanguage / MultiCharts
+=================================================================
+WHAT IT DOES
+-----------------------------------------------------------------
+Marks the HIGH and the LOW of each of the last N sessions (days)
+with horizontal lines.
+- Each line starts at the bar that actually made the high/low.
+- The line projects to the RIGHT, following price forward.
+- As soon as price trades through the level (the level is
+"invalidated"), the line STOPS / freezes at that bar and is
+no longer extended.
+- Only the most recent N sessions are kept on the chart; older
+lines are removed automatically.
+A high line is invalidated when price moves ABOVE it.
+A low line is invalidated when price moves BELOW it.
+INPUTS
+-----------------------------------------------------------------
+NumSessions How many previous sessions (days) to mark.
+Default: 3.
+UseCloseToBreak How a level counts as invalidated.
+false = a wick (the bar's High/Low) through the
+level invalidates it. (default)
+true = the bar must CLOSE beyond the level.
+ShowLabels true draws a small "H" / "L" tag at the start of
+each line. Default: false.
+HighColor Color of the session-high lines. Default: Red.
+LowColor Color of the session-low lines. Default: Cyan.
+LineWidth Thickness of the lines (1 = thin). Default: 2.
+LineStyle Line style: Tool_Solid, Tool_Dashed,
+Tool_Dotted, Tool_Dashed2, Tool_Dashed3.
+Default: Tool_Solid.
+HOW TO INSTALL
+-----------------------------------------------------------------
+1. Open the PowerLanguage Editor in MultiCharts.
+2. File > New > Indicator, give it a name
+(e.g. "Session HighLow Lines").
+3. Paste in the code from Session_HighLow_Lines.txt.
+4. Press F3 (Compile).
+5. On a chart: Insert > Indicator and select it.
+HOW TO READ IT
+-----------------------------------------------------------------
+- A colored line still running to the right edge = that session's
+high/low has NOT yet been taken; the level is still in play.
+- A line that ends mid-chart = the level was taken out at that
+point; it tells you when the prior high/low was broken.
+NOTES & LIMITATIONS
+-----------------------------------------------------------------
+- Sessions are detected by a calendar-date change. This is
+correct for regular / RTH day sessions. For instruments whose
+trading session crosses midnight (e.g. 24h futures), either set
+the chart to a session template aligned to your trading day, or
+edit the "NewSession =" line in the code.
+- Works on intraday charts and also on Daily charts (where each
+bar is treated as one session).
+- The very first session on the chart may be partial (it depends
+on where the loaded data begins), so its high/low can be
+incomplete.
+- Uses the classic Date/Time trend-line functions, which are
+exact on minute and higher charts. For sub-minute / tick
+charts, switch TL_New -> TL_New_s, TL_SetEnd -> TL_SetEnd_s
+and Time -> Time_s in the code.
+File: Session_HighLow_Lines.txt

@@ -1,0 +1,34 @@
+Hey guys I'm making a video on this simple dumb chart pattern strategy on Gold (for instagram and
+youtube)
+
+
+but I want to share the code with you to show you how even the dumbest and simplest strategy,
+once you add the right sizing logics can have a big impact
+Instrument: GC
+Time Frame: 4h
+attached the code for the version with fixed sizing at 1 contract "Gold Reversal Long Only Strategy"
+and
+the code for the version with volatility targeted sizing "Gold Reversal Target Vol Margin"
+for the inputs of "Gold Reversal Target Vol Margin":
+Inputs:
+Entry_On_Bullish_High(true),
+Stop_Use_Lowest(true),
+TP_RR_Ratio(1.0),
+TickSz(0.10),
+TickVal(10.0),
+MM_Capital_USD(500000), = Account Capital
+MM_Risk_Pct(2.0), = % Capital at risk per trade
+ATR_Filter_Risk_Pct(2.0),
+Slippage_Ticks(0),
+Max_Contracts(10),
+Max_Margin_Pct_Of_Acct(50.0), = max % of account you want to allocate as margin for this
+strategy
+Margin_Per_Contract_USD(0),
+Margin_Rate_Pct(10.0); = margin required in notional per contract
+I haven't optimized any of the parameters just taken the logic of the video and applied Volatility
+Sizing
+NOTE: the strategy seems to be working (even tought needs proper testing) and my main issue with
+something like this is that it doesn't have any reason behind on why this should work or keep
+working in the future (it doesn't have a solid hypotesis behind)
+
+I added this under Strategy Feedbacks too
